@@ -4,8 +4,8 @@
 
 | 日期 | 实验 ID | 任务 | 训练数据 | 策略 | epochs / batch | 评估设置 | episodes | 成功率 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- | ---: | ---: | --- |
-| 2026-10-21 | data-handover-clean-50 | handover_block | 自采 50 clean | — | — | — | — | — | 采集脚本：`scripts/03_collect_data.sh`；HDF5 285 帧/条，14 维 joint |
-| 2026-10-21 | act-handover-clean-v1 | handover_block | 自采 50 clean | ACT | 待填 | clean | 待填 | 待填 | 第一版基线 |
+| 2026-10-21 | data-handover-clean-50 | handover_block | 自采 50 clean | — | — | — | — | — | 50 条全部成功；原始 812MB；285 帧/条，14 维 joint；预处理 320×240 后 9.1GB |
+| 2026-10-21 | act-handover-clean-v1 | handover_block | 自采 50 clean | ACT | 2000 / 8 | clean | 计划 20 | 待填 | 320×240；4050 约 1.6s/epoch；训练中 |
 
 ## 记录模板
 
