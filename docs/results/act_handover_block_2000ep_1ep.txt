@@ -1,0 +1,16 @@
+experiment_id: act-handover-clean-v1
+date: 2026-10-21
+task: handover_block
+data: 50 self-collected demo_clean episodes (812MB raw, 282.4 frames avg)
+preprocess: 320x240, action_dim=14
+policy: ACT, 2000 epochs, batch 8, lr 1e-5, chunk 50
+train_wall_clock: 52m40s
+train_peak_vram: ~3.5GB
+eval_config: demo_clean
+eval_episodes: 1
+eval_seed: 0
+eval_flags: expert_check=False, temporal_agg=False, ACT_DEVICE=cpu, ACT_IMAGE_W=320, ACT_IMAGE_H=240
+success_rate: 0/1 = 0.0
+checkpoint: third_party/RoboTwin/XPolicyLab/policy/ACT/checkpoints/RoboTwin-handover_block-arx_x5-joint-0/policy_epoch_2000_seed_0.ckpt
+video: third_party/RoboTwin/eval_result/handover_block/ACT/demo_clean/RoboTwin-handover_block-arx_x5-joint-0/2026-10-21_19-34-35_002970/episode0.mp4
+note: smoke baseline only; 1 episode is not statistically meaningful; 2000/6000 epochs.
