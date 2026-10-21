@@ -29,3 +29,6 @@ train:  ## ACT 训练: make train TASK=handover_block SEED=0
 eval:  ## ACT 评估: make eval TASK=handover_block EVAL_CONFIG=demo_clean
 	bash scripts/06_eval_act.sh $(TASK) $(EVAL_CONFIG) $(SEED) \
 		RoboTwin-$(TASK)-arx_x5-joint-$(SEED) $(EVAL_EPISODES)
+
+summarize:  ## 汇总 eval_result -> outputs/results.csv
+	envs/robotwin/.venv/bin/python scripts/07_summarize_eval.py

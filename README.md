@@ -2,32 +2,44 @@
 
 双臂 VLA 的**仿真数据采集、训练与仿真评估**。
 
-> 状态：规划阶段（尚未安装仿真/训练环境）
+> 当前状态（2026-10-21）：本机 RTX 4050 已跑通
+> `RoboTwin 2.0 + XPolicyLab + CuRobo`，完成第一条 `handover_block` 自采数据；
+> 50 条 clean 采集进行中，随后训练 ACT 基线。
 
 ## 技术栈
 
 ```text
 RoboTwin 2.0  —— SAPIEN 仿真 / 50 个双臂任务 / 数据生成 / 官方评测协议
 XPolicyLab    —— 策略服务 + 统一评估（policy server ⇄ env client）
-LeRobot       —— LeRobotDataset v3 + ACT / DP / SmolVLA / π0 等策略
+LeRobot       —— 后续 VLA 微调的数据格式与策略（当前先用 ACT 基线）
 ```
 
 ## 文档
 
 - [开源生态调研](docs/research.md)：RoboTwin / XPolicyLab / LeRobot / OpenVLA-OFT / π0 / SmolVLA 对比与本机约束分析
 - [实施计划](docs/plan.md)：架构、里程碑 M0–M6、数据/训练/评估方案、风险与时间估算
+- [Runbook](docs/runbook.md)：本机安装、补丁、采集、训练、评估的实际命令
+- [任务笔记](docs/task_handover_block.md)：`handover_block` 的观测/动作/成功判定/基线
+- [实验记录](docs/experiment_log.md)：每次实验的参数与结果
 
-## 本机约束
+## 快速开始
 
-- RTX 4050 Laptop **6GB** VRAM / 14GB RAM / 144GB 可用磁盘
-- 本机目标：ACT 闭环 → SmolVLA 优化；7B 级 VLA 需 24GB+ 云 GPU
+```bash
+make check                       # GPU / torch / SAPIEN / CuRobo / 资产自检
+make collect EPISODES=50         # 自采 50 条 handover_block clean 数据
+make prepare                     # 映射 XPolicyLab 布局 + ACT 预处理
+make train EPOCHS=2000 BATCH_SIZE=4
+make eval EVAL_EPISODES=20
+make summarize                   # -> outputs/results.csv
+```
 
-## 环境隔离
+## 环境
 
-- 本仓库：Python 3.12 + uv（只做编排、数据统计、结果汇总）
-- RoboTwin：conda `python=3.10` + CUDA 12.1 + SAPIEN 3.0.0b1
-- LeRobot：按策略单独建环境
+- 本机：RTX 4050 Laptop 6GB / 14GB RAM；Ubuntu 24.04
+- RoboTwin：uv 管理的 Python 3.10 + torch 2.4.1+cu121 + SAPIEN 3.0.0b1
+- CUDA 12.4 toolkit 仅用于编译 CuRobo（项目内 `.cuda`，不污染系统）
+- 5090 迁移：torch 2.7.1+cu128 / CUDA 12.8 / `TORCH_CUDA_ARCH_LIST=12.0` / OIDN 2.3.3 补丁
 
 ## 下一步
 
-见 [计划中的「需要确认」](docs/plan.md#11-下一步需要你确认)，确认云端 GPU / 任务范围 / 数据方式后从 M0 开始。
+跑完 50 条 → ACT 训练 → clean 评估，记录成功率与视频；再考虑 randomized 和 VLA 微调。
