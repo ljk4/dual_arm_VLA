@@ -11,6 +11,7 @@ CUDA_PREFIX="$ROOT/envs/robotwin/.cuda"
 CUDA_HOME="$ROOT/envs/robotwin/.cuda_home"
 ROBOTWIN_COMMIT="ea8b21121ebb3cd201ff5b3fe361944ac94eda3f"
 CUROBO_TAG="v0.7.8"
+CUDA_TOOLKIT_VERSION="${CUDA_TOOLKIT_VERSION:-12.4.1}"
 
 log() { printf '\033[36m[setup]\033[0m %s\n' "$*"; }
 
@@ -46,8 +47,8 @@ fi
 
 # 6) project-local CUDA toolkit (build only; 5090 请改 12.8)
 if [[ ! -x "$CUDA_HOME/bin/nvcc" ]]; then
-    log "install CUDA 12.4 toolkit into $CUDA_PREFIX"
-    conda create -p "$CUDA_PREFIX" --override-channels -c defaults cuda-toolkit=12.4.1 -y
+    log "install CUDA ${CUDA_TOOLKIT_VERSION} toolkit into $CUDA_PREFIX"
+    conda create -p "$CUDA_PREFIX" --override-channels -c defaults cuda-toolkit="${CUDA_TOOLKIT_VERSION}" -y
     mkdir -p "$CUDA_HOME"
     ln -sfn ../.cuda/bin "$CUDA_HOME/bin"
     ln -sfn ../.cuda/targets/x86_64-linux/include "$CUDA_HOME/include"
