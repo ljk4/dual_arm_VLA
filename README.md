@@ -4,7 +4,7 @@
 
 > 当前状态（2026-10-21）：本机 RTX 4050 已跑通
 > `RoboTwin 2.0 + XPolicyLab + CuRobo`，完成第一条 `handover_block` 自采数据；
-> 50 条 clean 采集进行中，随后训练 ACT 基线。
+> 50 条 clean 自采数据已完成；ACT 2000-epoch 基线训练中。
 
 ## 技术栈
 

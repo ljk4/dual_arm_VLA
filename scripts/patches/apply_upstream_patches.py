@@ -107,6 +107,51 @@ def main() -> None:
            'deploy_meta="$(')
     patch(setup_client, anchor, new, 'eval_env_conda_env}/bin/python', "XPolicyLab setup client uv venv")
 
+    patch(server,
+          '            action_dim="${action_dim}"',
+          '            action_dim="${action_dim}" \\\n            device="${ACT_DEVICE:-cuda:0}"',
+          'device="${ACT_DEVICE:-cuda:0}"',
+          "XPolicyLab server device override")
+
+    deploy = ROBOTWIN / "XPolicyLab" / "policy" / "ACT" / "deploy.yml"
+    patch(deploy,
+          "temporal_agg: true",
+          "temporal_agg: false",
+          "temporal_agg: false",
+          "ACT temporal_agg off for chunked CPU eval")
+
+    base_task = ROBOTWIN / "envs" / "_base_task.py"
+    old = ('        sapien.render.set_ray_tracing_samples_per_pixel(32)\n'
+           '        sapien.render.set_ray_tracing_path_depth(8)\n'
+           '        sapien.render.set_ray_tracing_denoiser("oidn")')
+    new = ('        samples = int(os.environ.get("ROBOTWIN_RT_SAMPLES", "32"))\n'
+           '        sapien.render.set_ray_tracing_samples_per_pixel(samples)\n'
+           '        sapien.render.set_ray_tracing_path_depth(8)\n'
+           '        if os.environ.get("ROBOTWIN_DISABLE_DENOISER", "0") != "1":\n'
+           '            sapien.render.set_ray_tracing_denoiser("oidn")')
+    patch(base_task, old, new, "ROBOTWIN_RT_SAMPLES", "RoboTwin renderer memory knobs")
+
+    for rel, label in [
+        ("XPolicyLab/policy/ACT/detr/process_data.py", "ACT process_data image size"),
+        ("XPolicyLab/policy/ACT/model.py", "ACT model image size"),
+    ]:
+        path = ROBOTWIN / rel
+        text = path.read_text()
+        if "ACT_IMAGE_W" in text:
+            print(f"[skip] {label} (already patched)")
+            continue
+        text = text.replace(
+            "import os\n",
+            "import os\n\nACT_IMAGE_W = int(os.environ.get('ACT_IMAGE_W', '640'))\n"
+            "ACT_IMAGE_H = int(os.environ.get('ACT_IMAGE_H', '480'))\n",
+            1,
+        )
+        text = text.replace("(640, 480)", "(ACT_IMAGE_W, ACT_IMAGE_H)")
+        if "(ACT_IMAGE_W, ACT_IMAGE_H)" not in text:
+            raise SystemExit(f"[fail] {label}: resize anchor not found")
+        path.write_text(text)
+        print(f"[ok]   {label}")
+
     print("\nall patches applied")
 
 

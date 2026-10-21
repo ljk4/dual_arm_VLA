@@ -13,9 +13,10 @@
 - [x] CuRobo v0.7.8 编译（sm_89，5 个扩展）
 - [x] SAPIEN 光追冒烟（`Render Well`）
 - [x] 采集 1 条 `handover_block` episode（285 帧，HDF5 + 视频 + 指令）
-- [x] ACT 预处理 1 条（action 14 维，3 相机 640×480）
-- [ ] 采集 50 条 clean（进行中）
-- [ ] ACT 训练 + 评估
+- [x] 采集 50 条 clean（812MB 原始 HDF5）
+- [x] ACT 预处理 50 条（action 14 维，3 相机 320×240，9.1GB）
+- [ ] ACT 2000-epoch 训练（进行中）
+- [ ] clean 评估 + 结果记录
 
 ## 1. 版本矩阵
 
@@ -69,22 +70,37 @@ third_party/RoboTwin/data/demo_clean/handover_block/aloha_agilex/
 ## 5. ACT 基线
 
 ```bash
-# 1) 建立 XPolicyLab 需要的目录映射
-bash scripts/04_prepare_act.sh handover_block demo_clean
+# 1) 建立 XPolicyLab 需要的目录映射。
+#    本机 6GB 用原生 320×240；官方 640×480 是上采样，信息量相同但更慢。
+ACT_IMAGE_W=320 ACT_IMAGE_H=240 bash scripts/04_prepare_act.sh handover_block demo_clean
 
-# 2) 先跑 10 epoch 测耗时/显存（不会保存最终 ckpt，除非 SAVE_FREQ 匹配）
-EPOCHS=10 BATCH_SIZE=4 bash scripts/05_train_act.sh handover_block 0 0
+# 2) 先跑 10 epoch 测耗时/显存
+EPOCHS=10 BATCH_SIZE=8 bash scripts/05_train_act.sh handover_block 0 0
 
-# 3) 正式基线：6GB 上用 batch 4；epoch 数按实测耗时决定（先 1000–2000）
-EPOCHS=2000 BATCH_SIZE=4 bash scripts/05_train_act.sh handover_block 0 0
+# 3) 正式基线：320×240 + batch 8，4050 上约 1.6s/epoch
+EPOCHS=2000 BATCH_SIZE=8 bash scripts/05_train_act.sh handover_block 0 0
 
-# 4) 评估（XPolicyLab server/client 已适配 uv venv）
-bash scripts/06_eval_act.sh handover_block demo_clean 0
+# 4) 评估（6GB 上必须让 policy server 走 CPU，见 5.1）
+ACT_DEVICE=cpu EXPERT_CHECK=0 ACT_IMAGE_W=320 ACT_IMAGE_H=240 \
+  bash scripts/06_eval_act.sh handover_block demo_clean 0 \
+  RoboTwin-handover_block-arx_x5-joint-0 20
 ```
 
-> 注意：ACT 的 `num_epochs` 在代码里是「过一遍 50 条 episode」的 epoch，不是 step；
-> 官方 6000 epoch 在 4050 上会非常久。先用 1000–2000 epoch 建立可用的第一版基线，
-> 再根据成功率决定是否加长。`SAVE_FREQ` 默认等于 `EPOCHS`，保证最后会落 checkpoint。
+> 注意：ACT 的 `num_epochs` 在代码里是「过一遍 50 条 episode」的 epoch，不是 step。
+> 4050 上 2000 epoch 约 55 分钟；官方 6000 epoch 约 2.7 小时。
+> `SAVE_FREQ` 默认等于 `EPOCHS`，保证最后会落 checkpoint。
+
+### 5.1 6GB 显存的评估限制（重要）
+
+本机实验确认：**policy server 用 cuda + SAPIEN 仿真同时跑会触发 `RuntimeError: cannot create buffer`**
+（`camera.take_picture()` 分配失败），即使把 RT samples 降到 1、关闭 OIDN 也一样。
+这是 6GB 上「第二个 CUDA 进程 + Vulkan 渲染」的资源冲突，不是代码 bug。
+
+本机可用方案：
+
+- policy server `ACT_DEVICE=cpu`，`temporal_agg=false`（已 patch），每 50 步推理一次；
+- `EXPERT_CHECK=0` 跳过专家预检（减少重复建场景）；
+- 320×240 下 CPU 推理可接受，但 100 episodes 仍然慢；**正式 100-episode 评估建议上 5090**。
 
 ## 6. 5090 差异（后续迁移）
 

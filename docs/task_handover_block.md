@@ -82,7 +82,7 @@ action/{left,right}_ee_poses          (T, 7)
 - 285 帧（索引 0–284），约 9.5s @30FPS；
 - HDF5 约 16MB（含 4 路编码图像）；
 - 3 路 policy 相机（head + 双腕）；`cam_third_view` 也存了，但 ACT 默认不用；
-- ACT 预处理后图像 resize 到 **640×480**，action `(T, 14)`。
+- ACT 预处理后图像 resize 到 **320×240**（原始分辨率；官方脚本默认上采样到 640×480），action `(T, 14)`。
 
 ## 5. 任务难度与基线
 

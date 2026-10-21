@@ -11,6 +11,12 @@ EVAL_CONFIG="${2:-demo_clean}"
 SEED="${3:-0}"
 RUN_NAME="${4:-RoboTwin-$TASK-arx_x5-joint-$SEED}"
 EPISODES="${5:-100}"
+EXPERT_CHECK="${EXPERT_CHECK:-1}"
+if [[ "$EXPERT_CHECK" == "1" || "$EXPERT_CHECK" == "true" ]]; then
+    EXPERT_CHECK_ARG="True"
+else
+    EXPERT_CHECK_ARG="False"
+fi
 
 ACT_DIR="$ROBOTWIN/XPolicyLab/policy/ACT"
 CKPT="$ACT_DIR/checkpoints/$RUN_NAME"
@@ -20,10 +26,10 @@ mkdir -p "$ROOT/outputs/logs"
 LOG="$ROOT/outputs/logs/act_eval_${TASK}_${EVAL_CONFIG}_${RUN_NAME}_$(date +%Y%m%d_%H%M%S).log"
 ARGS_FILE="$(mktemp)"
 trap 'rm -f "$ARGS_FILE"' EXIT
-printf -- '--task_config\n%s\n--test_num\n%s\n--instruction_type\nseen\n' \
-    "$EVAL_CONFIG" "$EPISODES" > "$ARGS_FILE"
+printf -- '--task_config\n%s\n--test_num\n%s\n--instruction_type\nseen\n--expert_check\n%s\n' \
+    "$EVAL_CONFIG" "$EPISODES" "$EXPERT_CHECK_ARG" > "$ARGS_FILE"
 
-echo "[eval] task=$TASK eval_config=$EVAL_CONFIG run=$RUN_NAME episodes=$EPISODES"
+echo "[eval] task=$TASK eval_config=$EVAL_CONFIG run=$RUN_NAME episodes=$EPISODES expert_check=$EXPERT_CHECK_ARG"
 echo "[eval] log=$LOG"
 cd "$ACT_DIR"
 ROBOTWIN_EVAL_ARGS_FILE="$ARGS_FILE" PATH="$VENV/bin:$PATH" \
