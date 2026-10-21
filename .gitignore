@@ -8,12 +8,18 @@ wheels/
 
 # Virtual environments
 .venv
+envs/*/.venv/
+envs/*/.cuda/
+envs/*/.cuda_home/
 
 # Upstream checkouts / large artifacts
 third_party/
 data/
 outputs/
 checkpoints/
+processed_data/
+eval_result/
+__MACOSX/
 *.hdf5
 *.mp4
 *.log

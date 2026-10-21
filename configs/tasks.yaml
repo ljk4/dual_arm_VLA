@@ -1,0 +1,29 @@
+# 当前研究对象：一个双臂任务，先跑通再扩展。
+# 数据必须由 RoboTwin 仿真自采（不使用官方预采集数据集）。
+
+task: handover_block
+embodiment: aloha-agilex
+# XPolicyLab 的 action profile；arx_x5 对应 RoboTwin 的 aloha-agilex 布局
+env_cfg_type: arx_x5
+action_type: joint
+
+data:
+  # demo_clean: 无域随机化；demo_randomized: 强域随机化
+  config: demo_clean
+  episodes: 50
+  seed: 0
+  gpu: 0
+
+train:
+  policy: act
+  run_name: null          # null -> RoboTwin-<task>-<env_cfg_type>-<action_type>
+  seed: 0
+  gpu: 0
+
+eval:
+  # 先 clean 冒烟，再 clean/randomized 正式评估
+  smoke_episodes: 10
+  configs:
+    - demo_clean
+    - demo_randomized
+  seed: 0

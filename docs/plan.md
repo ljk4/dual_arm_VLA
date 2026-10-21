@@ -471,3 +471,21 @@ date,policy,checkpoint,train_data,eval_task,eval_setting,seed,episodes,success_r
 - [ ] `scripts/00–30` 可执行脚本
 - [ ] `outputs/results.csv` + 评估视频
 - [ ] 一份「本机 6GB 能跑到什么程度」的结论报告
+
+---
+
+## 13. 执行决策更新（2026-10-21）
+
+初版计划按「5090 32GB + 云端 VLA」写；实际执行按下面调整，原 M0–M6 保留作为后续路线。
+
+| 决策 | 内容 |
+| --- | --- |
+| 先本机 | 5090 暂不接入，先用本机 RTX 4050 6GB 跑通垂直切片（Ada sm_89，直接用 torch 2.4.1+cu121） |
+| 数据 | **不使用官方预采集数据**，全部由 RoboTwin `collect_data.sh` 自采 |
+| 任务 | `handover_block`：左臂抓取 → 交给右臂 → 放到蓝垫；ALOHA 数据生成成功率约 83% |
+| 规模 | 先 1 条冒烟，再 50 条 `demo_clean`；`demo_randomized` 作为后续 OOD 评估 |
+| 环境 | `uv` 管 Python 3.10 + 项目依赖；CUDA 12.4 toolkit 用 conda 装在 `envs/robotwin/.cuda`，通过 `.cuda_home` 暴露标准布局 |
+| 基线 | ACT（XPolicyLab ACT 适配器）优先；训练/评估跑通后再考虑 VLA 微调 |
+| 5090 | 后续单独建 `envs/robotwin-5090`：torch 2.7.1+cu128、CUDA 12.8、`TORCH_CUDA_ARCH_LIST=12.0`、OIDN 2.3.3 补丁 |
+
+当前完成度与逐条命令见 [`runbook.md`](./runbook.md)。

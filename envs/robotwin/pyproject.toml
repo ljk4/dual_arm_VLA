@@ -1,0 +1,64 @@
+[project]
+name = "robotwin-env"
+version = "0.1.0"
+description = "RoboTwin 2.0 runtime environment (Python 3.10, uv-managed)"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    # --- core numeric / vision ---
+    "torch==2.4.1",
+    "torchvision==0.19.1",
+    "numpy==1.26.4",
+    "scipy==1.10.1",
+    "opencv-python==4.10.0.84",
+    "opencv-python-headless==4.10.0.84",
+    "transforms3d==0.4.2",
+    "trimesh==4.4.3",
+    "open3d==0.18.0",
+    "imageio==2.34.2",
+    "av",
+    "moviepy==1.0.3",
+    "matplotlib",
+    "einops",
+    "packaging",
+    "ipython",
+
+    # --- simulation ---
+    "sapien==3.0.0b1",
+    "mplib==0.2.1",
+    "gymnasium==0.29.1",
+    "pyglet<2",
+
+    # --- data / serving ---
+    "h5py>=3.8",
+    "zarr<3",
+    "PyYAML>=6",
+    "pydantic>=2.5",
+    "rich>=13.7",
+    "websockets>=13.0",
+    "msgpack>=1.0.8",
+    "msgpack-numpy>=0.4.8",
+    "huggingface_hub==0.25.0",
+    "hf_transfer==0.1.9",
+    "openai",
+    "azure==4.0.0",
+    "azure-ai-inference",
+    "wandb",
+    "termcolor",
+
+    # --- ACT baseline deps ---
+    "dm_control==1.0.14",
+    "mujoco==2.3.7",
+    "pyquaternion",
+    "rospkg",
+    "pexpect",
+
+    # --- CuRobo build/runtime ---
+    "warp-lang==1.12.0",
+    "setuptools==69.5.1",
+    "wheel",
+    "ninja",
+]
+
+[tool.uv]
+package = false
+index-url = "https://pypi.org/simple"
