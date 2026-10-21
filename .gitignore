@@ -19,7 +19,40 @@ outputs/
 checkpoints/
 processed_data/
 eval_result/
+logs/
+videos/
 __MACOSX/
 *.hdf5
 *.mp4
+*.zip
+*.tar.gz
+
+# Training caches / artifacts
+wandb/
+lightning_logs/
+tensorboard/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.engine
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+
+# Secrets (keep an example file if needed)
+.env
+.env.*
+!.env.example
+
+# Logs
 *.log
