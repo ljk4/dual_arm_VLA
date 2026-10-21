@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Upstream checkouts / large artifacts
+third_party/
+data/
+outputs/
+checkpoints/
+*.hdf5
+*.mp4
+*.log
