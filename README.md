@@ -3,8 +3,9 @@
 双臂 VLA 的**仿真数据采集、训练与仿真评估**。
 
 > 当前状态（2026-10-21）：本机 RTX 4050 已跑通
-> `RoboTwin 2.0 + XPolicyLab + CuRobo`，完成第一条 `handover_block` 自采数据；
-> 50 条 clean 自采数据已完成；ACT 2000-epoch 基线训练中。
+> `RoboTwin 2.0 + XPolicyLab + CuRobo`：50 条 `handover_block` 自采数据、
+> ACT 2000-epoch checkpoint、clean 1 条 smoke 评估（0/1）。
+> 正式 6000 epoch / 100 episodes 基线建议上 5090。
 
 ## 技术栈
 
@@ -20,6 +21,7 @@ LeRobot       —— 后续 VLA 微调的数据格式与策略（当前先用 AC
 - [实施计划](docs/plan.md)：架构、里程碑 M0–M6、数据/训练/评估方案、风险与时间估算
 - [Runbook](docs/runbook.md)：本机安装、补丁、采集、训练、评估的实际命令
 - [任务笔记](docs/task_handover_block.md)：`handover_block` 的观测/动作/成功判定/基线
+- [基线报告](docs/baseline_report.md)：本机 50 条自采 → ACT 2000 epoch → 1 条评估的结果、证据与局限
 - [实验记录](docs/experiment_log.md)：每次实验的参数与结果
 
 ## 快速开始

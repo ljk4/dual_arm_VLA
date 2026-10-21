@@ -15,8 +15,9 @@
 - [x] 采集 1 条 `handover_block` episode（285 帧，HDF5 + 视频 + 指令）
 - [x] 采集 50 条 clean（812MB 原始 HDF5）
 - [x] ACT 预处理 50 条（action 14 维，3 相机 320×240，9.1GB）
-- [ ] ACT 2000-epoch 训练（进行中）
-- [ ] clean 评估 + 结果记录
+- [x] ACT 2000-epoch 训练（52:40，峰值 ~3.5GB）
+- [x] clean 评估 1 条（0/1，CPU policy server，smoke）
+- [ ] 正式 100 episodes / 6000 epoch（建议 5090）
 
 ## 1. 版本矩阵
 
