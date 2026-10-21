@@ -72,12 +72,19 @@ third_party/RoboTwin/data/demo_clean/handover_block/aloha_agilex/
 # 1) 建立 XPolicyLab 需要的目录映射
 bash scripts/04_prepare_act.sh handover_block demo_clean
 
-# 2) 训练（6000 steps，单卡）
-bash scripts/05_train_act.sh handover_block 0 0
+# 2) 先跑 10 epoch 测耗时/显存（不会保存最终 ckpt，除非 SAVE_FREQ 匹配）
+EPOCHS=10 BATCH_SIZE=4 bash scripts/05_train_act.sh handover_block 0 0
 
-# 3) 评估（待验证：XPolicyLab server 默认 conda activate，需要 uv 适配）
-bash scripts/06_eval_act.sh handover_block demo_clean
+# 3) 正式基线：6GB 上用 batch 4；epoch 数按实测耗时决定（先 1000–2000）
+EPOCHS=2000 BATCH_SIZE=4 bash scripts/05_train_act.sh handover_block 0 0
+
+# 4) 评估（XPolicyLab server/client 已适配 uv venv）
+bash scripts/06_eval_act.sh handover_block demo_clean 0
 ```
+
+> 注意：ACT 的 `num_epochs` 在代码里是「过一遍 50 条 episode」的 epoch，不是 step；
+> 官方 6000 epoch 在 4050 上会非常久。先用 1000–2000 epoch 建立可用的第一版基线，
+> 再根据成功率决定是否加长。`SAVE_FREQ` 默认等于 `EPOCHS`，保证最后会落 checkpoint。
 
 ## 6. 5090 差异（后续迁移）
 

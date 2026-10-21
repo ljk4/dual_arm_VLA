@@ -69,6 +69,11 @@ def main() -> None:
           "--num_epochs ${ACT_NUM_EPOCHS:-6000}",
           "ACT_NUM_EPOCHS",
           "ACT epochs env")
+    patch(train,
+          "--save_freq 6000",
+          "--save_freq ${ACT_SAVE_FREQ:-6000}",
+          "ACT_SAVE_FREQ",
+          "ACT save freq env")
 
     server = ROBOTWIN / "XPolicyLab" / "policy" / "ACT" / "setup_eval_policy_server.sh"
     old = ('source "$(conda info --base)/etc/profile.d/conda.sh"\n'
