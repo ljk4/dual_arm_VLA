@@ -23,6 +23,7 @@ LeRobot       —— 后续 VLA 微调的数据格式与策略（当前先用 AC
 - [任务笔记](docs/task_handover_block.md)：`handover_block` 的观测/动作/成功判定/基线
 - [基线报告](docs/baseline_report.md)：本机 50 条自采 → ACT 2000 epoch → 1 条评估的结果、证据与局限
 - [实验记录](docs/experiment_log.md)：每次实验的参数与结果
+- [Kaggle 部署评估](docs/kaggle_deployment.md)：为什么完整 RoboTwin 闭环在 Kaggle 不可行、Vulkan probe、训练-only 方案
 - [云服务器正式闭环](docs/cloud_server_runbook.md)：从 GitHub clone 到 50 条自采、ACT 6000 epoch、clean/randomized 100 episodes 的完整命令（含 4090/A100 与 5090 两条路径）
 
 ## 快速开始
