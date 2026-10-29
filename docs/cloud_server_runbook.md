@@ -8,6 +8,31 @@
 >
 > 仓库不包含以下内容（都已被 `.gitignore` 忽略），必须在新机器上重新生成：
 > `third_party/`、`data/`、`assets/`、`outputs/`、`*.hdf5`、`*.mp4`、checkpoint、虚拟环境。
+>
+> **先做网络预检**：[Clash 下载与使用](clash_proxy.md)说明本机
+> `/home/ljk/tools/no_gui_linux_clash/clashctl` 对应项目的下载、安装、订阅和排错。
+> **使用容器**：[Docker 部署方案](docker_deployment.md)提供 Dockerfile / Compose、
+> GPU 与 Vulkan 配置、分阶段代理和持久化流程。
+
+---
+
+## 0. 先打通网络，再部署
+
+国内云服务器按 [Clash 代理说明](clash_proxy.md)先安装 `clashctl`、导入可用订阅，
+在执行后续命令的同一个终端运行：
+
+```bash
+export CLASHCTL_HOME="$HOME/.clashctl"
+source "$CLASHCTL_HOME/scripts/cmd/clashctl.sh"
+clashctl on
+clashctl status
+export HF_ENDPOINT=https://huggingface.co
+```
+
+先通过代理文档里的 GitHub / PyPI / PyTorch / HF 资产 URL 检查，再进入第 1–6 节。
+能稳定访问时可跳过代理；如果使用 `hf-mirror.com`，也要测试其真实文件下载地址。
+`clashctl on` 只影响当前 Shell 及之后启动的子进程，新 SSH / tmux 会话需要重新启用；
+Docker 拉镜像、构建和运行分别按 [Docker 文档](docker_deployment.md)配置。
 
 ---
 
@@ -21,7 +46,7 @@
 | 内存 | 32GB+（本机 14GB 偏紧） |
 | 磁盘 | 100GB+ 可用（640×480 预处理后约 37GB） |
 | 权限 | sudo（装 Vulkan/ffmpeg） |
-| 网络 | 能访问 GitHub + Hugging Face；国内建议 `HF_ENDPOINT=https://hf-mirror.com` |
+| 网络 | 先按第 0 节验证 GitHub / PyPI / PyTorch / HF 下载；HF 官方站与镜像择一使用 |
 
 先确认 GPU 架构：
 
@@ -57,7 +82,7 @@ ffmpeg -version | head -1
 如果 `vulkaninfo` 看不到 NVIDIA：
 
 ```bash
-ls /usr/share/vulkan/icd.d/nvidia_icd.json
+find /etc/vulkan /usr/share/vulkan -name 'nvidia_icd*.json' 2>/dev/null
 ldconfig -p | grep libvulkan.so.1
 ```
 
@@ -104,7 +129,7 @@ git -C third_party/RoboTwin/XPolicyLab rev-parse HEAD
 # 应为 ea8b211... / fa431ec...
 ```
 
-> 如果 GitHub 慢，可先在能联网的机器下载 tarball/镜像，或给 git 配代理；
+> 如果 GitHub 慢，先回第 0 节修复代理，再重试这一阶段；
 > `XPolicyLab` 是 RoboTwin 的子模块，必须执行 `submodule update`。
 
 ---
@@ -184,7 +209,8 @@ PY
 
 ```bash
 cd "$WORK/dual_arm_VLA"
-export HF_ENDPOINT=https://hf-mirror.com
+# 延用第 0 节选定的入口；未配置时脚本仍默认 hf-mirror.com
+export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 bash scripts/02_download_assets.sh
 ```
 
@@ -440,7 +466,8 @@ git push
 | `Unknown CUDA arch (10.1)` / 5090 无 kernel | 换 torch 2.7.1+cu128（Track B）；`TORCH_CUDA_ARCH_LIST=12.0` |
 | `OIDN Error: invalid handle` | 5090 按第 6 节替换 OIDN 2.3.3 |
 | `cannot create buffer` | GPU 显存不足（policy + sim）；换 32GB / 降 samples / CPU policy |
-| HF 下载慢/超时 | `HF_ENDPOINT=https://hf-mirror.com`；失败重跑会断点续传 |
+| GitHub / PyPI / HF 下载慢/超时 | 先按[Clash 文档](clash_proxy.md)测试对应实际 URL、代理端口与节点；确认 HF_ENDPOINT，修复后重跑失败阶段复用缓存 |
+| Docker 拉镜像超时 / 容器代理无效 | 当前终端代理不覆盖 daemon / build / runtime，按 [Docker 部署](docker_deployment.md)分别配置 |
 | `git submodule` 空 / 找不到 XPolicyLab | `git -C third_party/RoboTwin submodule update --init --recursive` |
 | `assets/objects` 缺失 | 先跑 `scripts/02_download_assets.sh`，再跑 `01_setup` |
 | `demo_randomized` 评估失败 | 没有 `background_texture`；`WITH_TEXTURES=1 bash scripts/02_download_assets.sh` |
@@ -470,6 +497,7 @@ git push
 
 ```bash
 # Track A（4090/A100/L40S）
+# 前提：已完成第 0 节网络检查及第 2 节系统依赖
 git clone <REPO> && cd dual_arm_VLA
 uv sync --project envs/robotwin
 bash scripts/02_download_assets.sh

@@ -69,8 +69,15 @@ if ldconfig -p 2>/dev/null | grep -q 'libvulkan.so.1'; then
 else
     bad "libvulkan.so.1 missing (sudo apt install libvulkan1)"
 fi
-if [[ -f /usr/share/vulkan/icd.d/nvidia_icd.json ]]; then
-    ok "NVIDIA Vulkan ICD present"
+NVIDIA_ICD=''
+for icd in /etc/vulkan/icd.d/nvidia_icd*.json /usr/share/vulkan/icd.d/nvidia_icd*.json; do
+    if [[ -f "$icd" ]]; then
+        NVIDIA_ICD="$icd"
+        break
+    fi
+done
+if [[ -n "$NVIDIA_ICD" ]]; then
+    ok "NVIDIA Vulkan ICD present: $NVIDIA_ICD"
 else
     bad "NVIDIA Vulkan ICD missing"
 fi

@@ -25,6 +25,8 @@ LeRobot       —— 后续 VLA 微调的数据格式与策略（当前先用 AC
 - [实验记录](docs/experiment_log.md)：每次实验的参数与结果
 - [Kaggle 部署评估](docs/kaggle_deployment.md)：为什么完整 RoboTwin 闭环在 Kaggle 不可行、Vulkan probe、训练-only 方案
 - [云服务器正式闭环](docs/cloud_server_runbook.md)：从 GitHub clone 到 50 条自采、ACT 6000 epoch、clean/randomized 100 episodes 的完整命令（含 4090/A100 与 5090 两条路径）
+- [Clash 代理](docs/clash_proxy.md)：`no_gui_linux_clash/clashctl` 下载、无界面安装、订阅、网络预检和常见问题
+- [Docker 部署](docs/docker_deployment.md)：GPU / Vulkan 容器、宿主机 Clash 代理、持久化与采集训练评估流程
 
 ## 快速开始
 

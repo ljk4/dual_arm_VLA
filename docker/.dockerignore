@@ -1,0 +1,6 @@
+# Only the system image and its GPU preflight script belong in the build context.
+# In particular, never send docker/.env (proxy credentials) to the builder.
+*
+!Dockerfile
+!gpu-check.sh
+!.dockerignore

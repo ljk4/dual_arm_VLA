@@ -2,6 +2,9 @@
 
 > 目标：不依赖 5090，先用本机 6GB 跑通「自采仿真数据 → ACT 基线 → 评估」的垂直切片。
 > 5090 的差异见文末；当前所有版本以本机为准。
+>
+> 新机器先完成 [Clash 下载与网络预检](clash_proxy.md)；云端完整流程见
+> [云服务器 Runbook](cloud_server_runbook.md)，容器部署见 [Docker 方案](docker_deployment.md)。
 
 ## 0. 当前进度（2026-10-21）
 

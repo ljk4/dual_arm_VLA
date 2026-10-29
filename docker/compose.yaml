@@ -1,0 +1,66 @@
+name: dual-arm-vla
+
+services:
+  robotwin:
+    image: ${ROBOTWIN_IMAGE:-dual-arm-vla/robotwin:cu124}
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Linux only: a proxy bound to host 127.0.0.1 is reachable during RUN steps.
+      # Pulling the base image still uses Docker daemon / BuildKit proxy settings.
+      network: host
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-nvidia/cuda:12.4.1-base-ubuntu22.04}
+        HTTP_PROXY: ${PROXY_URL:-}
+        HTTPS_PROXY: ${PROXY_URL:-}
+        ALL_PROXY: ${PROXY_URL:-}
+        NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,::1}
+        http_proxy: ${PROXY_URL:-}
+        https_proxy: ${PROXY_URL:-}
+        all_proxy: ${PROXY_URL:-}
+        no_proxy: ${NO_PROXY:-localhost,127.0.0.1,::1}
+    # Linux host networking lets curl/git/uv use the host Clash loopback listener.
+    network_mode: host
+    init: true
+    stdin_open: true
+    tty: true
+    shm_size: 8gb
+    working_dir: /workspace/dual_arm_VLA
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility,graphics
+      HTTP_PROXY: ${PROXY_URL:-}
+      HTTPS_PROXY: ${PROXY_URL:-}
+      ALL_PROXY: ${PROXY_URL:-}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,::1}
+      http_proxy: ${PROXY_URL:-}
+      https_proxy: ${PROXY_URL:-}
+      all_proxy: ${PROXY_URL:-}
+      no_proxy: ${NO_PROXY:-localhost,127.0.0.1,::1}
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      CUDA_TOOLKIT_VERSION: ${CUDA_TOOLKIT_VERSION:-12.4.1}
+      MAX_JOBS: ${MAX_JOBS:-2}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ..:/workspace/dual_arm_VLA
+      # Isolate host virtual environments and absolute asset paths from Docker.
+      - robotwin-third-party:/workspace/dual_arm_VLA/third_party
+      - robotwin-venv:/workspace/dual_arm_VLA/envs/robotwin/.venv
+      - robotwin-cuda:/workspace/dual_arm_VLA/envs/robotwin/.cuda
+      - robotwin-cuda-home:/workspace/dual_arm_VLA/envs/robotwin/.cuda_home
+      - download-cache:/root/.cache
+      - ../outputs/docker:/workspace/dual_arm_VLA/outputs
+
+volumes:
+  robotwin-third-party:
+  robotwin-venv:
+  robotwin-cuda:
+  robotwin-cuda-home:
+  download-cache:
