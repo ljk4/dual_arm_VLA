@@ -1,5 +1,11 @@
 # Kaggle 部署评估与训练-only Runbook
 
+> **执行前确认两套路径**：host 端先按[磁盘与安装路径](storage_layout.md)设置自己的
+> `DATA_ROOT`、`WORK`、环境和缓存目录；有数据盘时使用实际挂载点，没有则用 `$HOME`。
+> Kaggle 端沿用平台目录：`/kaggle/input/<数据集名>` 为只读输入，`/kaggle/working`
+> 用于仓库、环境、预处理和输出；替换自己的数据集名称，不要把这些路径机械改为 host 的数据盘路径。
+> Notebook 会话中的输出还需按文末说明保存；此处目录划分不代表独立云数据盘或永久持久化。
+
 > 结论先行：**完整的 RoboTwin「仿真采集 → 训练 → 仿真评估」闭环不能在 Kaggle 上跑通。**
 > 原因不是显存，而是 Kaggle 容器**没有可用的 NVIDIA Vulkan ICD**；SAPIEN 的 RT 渲染
 > 只能落到 llvmpipe 软件光栅器，无法做官方协议的数据采集与评估。
@@ -124,7 +130,7 @@ Kaggle 版本/配额会变，以上只用于估算；以 Notebook 右上角 Sett
 在已经采集完 50 条的 host 上：
 
 ```bash
-cd dual_arm_VLA/third_party/RoboTwin/data/demo_clean/handover_block/aloha_agilex
+cd "$WORK/dual_arm_VLA/third_party/RoboTwin/data/demo_clean/handover_block/aloha_agilex"
 zip -r handover_raw.zip data
 # 约 812MB；只包含 HDF5，不需要视频/纹理
 ```

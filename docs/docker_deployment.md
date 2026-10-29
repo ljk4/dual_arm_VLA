@@ -1,5 +1,41 @@
 # Docker 部署：RoboTwin + ACT + 宿主机 Clash
 
+## 执行前：替换宿主机安装地址，确认系统盘 / 数据盘
+
+先按[安装路径与磁盘说明](storage_layout.md)确认真实挂载点。下表列出本篇必须设置的位置；
+**`/data` 只是示例，替换为自己的数据盘挂载点，没有独立数据盘时用 `$HOME`。**
+
+| 位置 | 本篇需要设置 / 检查什么 |
+| --- | --- |
+| 宿主机仓库父目录 `WORK` | 下方设为 `$DATA_ROOT/work`；源码、`outputs/docker`、`backups/docker` 跟随仓库 |
+| Docker 持久卷地址 | 首次 pull / build / up 前检查 `Docker Root Dir`；需要放数据盘时配置 daemon 的 `data-root` |
+| 镜像 / 容器层地址 | 若使用 containerd image store，另查 containerd 的 `root`；它不随 Docker `data-root` 自动移动 |
+| `docker/.env` | 编辑本篇第 3 节的网络与镜像参数；当前 Compose 不通过 `DATA_ROOT` 指定持久卷位置 |
+| 宿主机 Clash | `CLASHCTL_SOURCE` / `CLASHCTL_HOME` 见 [Clash 文首](clash_proxy.md)，可留在系统盘用户目录 |
+| 系统配置 / 驱动 | `/etc/docker`、`/etc/containerd`、驱动和系统工具保留系统默认位置 |
+| 容器内路径 | `/workspace/dual_arm_VLA`、`/root/.cache`、`/opt/conda` 是固定容器路径，通常不替换；实际占哪块宿主盘由挂载和 Docker 存储决定 |
+
+在**宿主机**设置并核对，确认数据盘已挂载后再创建目录：
+
+```bash
+export DATA_ROOT="/data"              # 替换成自己的实际数据盘挂载点
+# 没有独立数据盘时改用：export DATA_ROOT="$HOME"
+findmnt -T "$DATA_ROOT"
+df -hT / "$DATA_ROOT"
+```
+
+如果预期的数据盘未挂载，先完成挂载，不要把系统盘上的同名目录误当数据盘。
+确认设备和空间符合预期后，再设置项目父目录；本篇第 3 节才会创建它：
+
+```bash
+export WORK="$DATA_ROOT/work"
+```
+
+Docker `data-root` / containerd `root` 的配置位置和验证命令见
+[统一说明第 3 节](storage_layout.md#3-docker-另外需要设置的地址)，应在本篇第 1 节之后、
+**第 2 节首次拉镜像之前**完成；保留已有 NVIDIA runtime / proxy 配置。
+新 SSH / tmux 会话重新加载自己的路径设置；已有存储改位置前需要备份与迁移，改变量不会搬文件。
+
 适用：Ubuntu 22.04 / 24.04 x86_64 云服务器，4090 / A100 / L40S 等 Track A GPU。
 RTX 5090 需要额外的 torch / CUDA / OIDN 适配，见第 7 节。
 **本方案已做静态检查，尚未完成 Docker 镜像构建及容器 GPU 闭环实测。**
@@ -117,7 +153,7 @@ Clash 必须先运行；端口变动后同步修改此文件并重启 daemon。
 宿主机执行：
 
 ```bash
-export WORK="$HOME/work"
+: "${WORK:?请先按文首设置实际的宿主机 WORK 路径}"
 mkdir -p "$WORK"
 cd "$WORK"
 git clone <YOUR_GITHUB_REPO_URL> dual_arm_VLA
@@ -177,7 +213,8 @@ Toolkit 可以把 ICD 注入 `/etc/vulkan/icd.d/`，文件名也可能带架构�
 dc exec robotwin bash
 ```
 
-以下在**容器内**执行，固定工作路径，不使用宿主机的 `$HOME/work`：
+以下在**容器内**执行，固定工作路径，不使用宿主机的 `WORK` / 数据盘地址，
+也不要复制裸机部署文首的缓存变量块覆盖 Compose 已设置的容器缓存路径：
 
 ```bash
 cd /workspace/dual_arm_VLA
@@ -252,7 +289,8 @@ envs/robotwin/.venv/bin/python scripts/07_summarize_eval.py
 
 ## 6. 持久化、备份与重启
 
-Compose 项目名固定为 `dual-arm-vla`，持久化位置如下：
+Compose 项目名固定为 `dual-arm-vla`，持久化位置如下；named volumes 在哪块盘上由文首的
+Docker 存储设置决定，不跟随宿主机 `WORK` 自动改变：
 
 | 容器位置 | 存储 | 内容 |
 | --- | --- | --- |
@@ -283,8 +321,8 @@ dc cp robotwin:/workspace/dual_arm_VLA/third_party/RoboTwin/data backups/docker/
 这些目录与输出均不应提交 Git。单独搬运镜像：
 
 ```bash
-docker save dual-arm-vla/robotwin:cu124 -o /tmp/dual-arm-vla-robotwin.tar
-# 上传到目标机器后：docker load -i /tmp/dual-arm-vla-robotwin.tar
+docker save dual-arm-vla/robotwin:cu124 -o "$WORK/dual-arm-vla-robotwin.tar"
+# 上传到目标机器自己选择的数据盘目录后：docker load -i <实际归档路径>
 ```
 
 镜像不包含 bind mount 源码和 named volumes，`save/load` 不能迁移数据、venv 或资产。

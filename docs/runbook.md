@@ -1,5 +1,11 @@
 # Runbook：本机 RTX 4050 跑通 `handover_block`
 
+> **执行前设置路径**：先按[磁盘与安装路径](storage_layout.md)设置 `DATA_ROOT`、
+> `WORK="$DATA_ROOT/work"`、Miniconda 和缓存位置；有独立数据盘时替换为实际挂载点，
+> 没有则将 `DATA_ROOT` 设为 `$HOME`。驱动和系统依赖仍安装在系统盘。
+> 本篇命令从实际仓库根目录运行：`cd "$WORK/dual_arm_VLA"`；`envs/`、`third_party/`、
+> `outputs/` 都跟随仓库所在磁盘，不要照搬历史本机绝对路径。
+
 > 目标：不依赖 5090，先用本机 6GB 跑通「自采仿真数据 → ACT 基线 → 评估」的垂直切片。
 > 5090 的差异见文末；当前所有版本以本机为准。
 >

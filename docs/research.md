@@ -1,5 +1,10 @@
 # 双臂 VLA 仿真：开源生态调研
 
+> **路径说明**：本篇无安装入口，文中机器资源和路径为调研时的本机记录。
+> 部署前按[磁盘与安装路径](storage_layout.md)设置自己的系统盘 / 数据盘和 `WORK`，
+> 有数据盘时使用实际挂载点，没有则使用 `$HOME`；安装环境、缓存和资产的具体地址
+> 以[云服务器 Runbook](cloud_server_runbook.md)或[Docker 部署](docker_deployment.md)为准。
+
 > 调研时间：2026-10-21
 > 目标：在**双臂**仿真环境中完成「数据采集 → 训练 → 仿真评估」闭环，尽量复用成熟开源项目。
 > 本机：Ubuntu 24.04 / RTX 4050 Laptop **6GB VRAM** / 14GB RAM / 144GB 可用磁盘 / Clash TUN 网络。

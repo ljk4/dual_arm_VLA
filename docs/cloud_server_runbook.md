@@ -1,5 +1,51 @@
 # 云服务器正式闭环 Runbook
 
+## 执行前：替换安装路径与磁盘
+
+**本文的用户安装地址是示例，请先替换成自己的系统盘、数据盘和用户名对应的目录。**
+各类存储的完整清单见[磁盘与安装路径](storage_layout.md)。
+`/data`、`/workspace` 或 `$HOME` 的名字不能证明它在数据盘上；先查看实际挂载。
+若服务器没有区分系统盘和数据盘，将下例 `DATA_ROOT` 改为 `$HOME` 即可，不必创建一个名为
+`/data` 的普通目录来冒充数据盘。多用户机器请选自己有写权限的专用目录。
+
+```bash
+df -hT
+export DATA_ROOT="/data"  # 必须替换：实际数据盘挂载目录或其下自己的目录
+# 没有单独数据盘时，改用：export DATA_ROOT="$HOME"
+findmnt -T "$DATA_ROOT"
+df -hT "$DATA_ROOT"
+```
+
+确认 `findmnt` 的设备与挂载点、`df` 的空间符合预期后，再设置以下安装地址。
+若路径不存在，或选择独立数据盘后结果仍指向系统盘，先核对云平台的挂载配置，不要继续大体积下载。
+
+```bash
+export WORK="$DATA_ROOT/work"
+export CACHE_ROOT="$DATA_ROOT/cache"
+export MINICONDA_DIR="$DATA_ROOT/tools/miniconda3"
+export UV_CACHE_DIR="$CACHE_ROOT/uv"
+export UV_PYTHON_INSTALL_DIR="$CACHE_ROOT/uv/python"
+export HF_HOME="$CACHE_ROOT/huggingface"
+export TORCH_HOME="$CACHE_ROOT/torch"
+export CONDA_PKGS_DIRS="$CACHE_ROOT/conda/pkgs"
+export TMPDIR="$DATA_ROOT/tmp"
+mkdir -p "$WORK" "$CACHE_ROOT" "$(dirname "$MINICONDA_DIR")" "$TMPDIR"
+```
+
+| 本文需要检查/设置的位置 | 默认或示例地址 | 所属磁盘与替换方式 |
+| --- | --- | --- |
+| 系统依赖、驱动、Vulkan | `/usr`、`/etc` 等系统目录 | 系统盘，由系统包管理器安装；不把这些目录整体改到数据盘 |
+| uv 命令本身（第 2 节） | `$HOME/.local/bin` | 小体积用户工具；本例保留默认位置，区别于下面的 Python/包缓存 |
+| Miniconda 安装目录（第 2 节） | `$MINICONDA_DIR` | 推荐数据盘；`-p` 与 `source` 必须使用同一地址 |
+| 仓库及上游（第 3 节） | `$WORK/dual_arm_VLA` | 推荐数据盘；`third_party`、资产、原始/处理后数据、checkpoint、视频和 `outputs` 都随仓库落盘 |
+| Python 与 CUDA 环境（第 4、6 节） | 仓库内 `envs/robotwin/.venv`、`.cuda`、`.cuda_home` | 随仓库所在盘；现有脚本按项目相对路径定位，不单独改环境目录名 |
+| Python、uv、HF、PyTorch、conda 缓存及临时下载 | 上述 `UV_*`、`HF_HOME`、`TORCH_HOME`、`CONDA_PKGS_DIRS`、`TMPDIR` | 推荐数据盘，需在安装/下载前设置；改 `WORK` 不会自动搬迁这些缓存 |
+| Clash 安装目录（第 0 节） | `${CLASHCTL_HOME:-$HOME/.clashctl}` | 小体积文件可留系统盘；自定义时按 [Clash 文档](clash_proxy.md)让安装与加载使用同一路径 |
+
+后续命令沿用这里设置的变量，不会重新把 `WORK` 改回 `$HOME/work`。新 SSH / tmux 会话须
+重新导出这些路径；可将自己确认后的变量写入个人 Shell 配置并加载，避免后续下载回到默认缓存。
+先确定最终位置再安装；迁移已有仓库后还需重新生成资产配置中的绝对路径，不宜直接移动已建环境。
+
 > 目标：在**全新云服务器**上克隆本仓库，完成 `handover_block` 的
 > **自采 50 条 clean 数据 → ACT 6000 epoch → clean / randomized 各 100 episodes 评估**。
 >
@@ -22,7 +68,7 @@
 在执行后续命令的同一个终端运行：
 
 ```bash
-export CLASHCTL_HOME="$HOME/.clashctl"
+export CLASHCTL_HOME="${CLASHCTL_HOME:-$HOME/.clashctl}"
 source "$CLASHCTL_HOME/scripts/cmd/clashctl.sh"
 clashctl on
 clashctl status
@@ -100,9 +146,10 @@ uv --version
 安装 Miniconda（只用于给 CuRobo 编译提供**项目内 CUDA toolkit**，不是 Python 主环境）：
 
 ```bash
-curl -fsSL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
-bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
-source "$HOME/miniconda3/etc/profile.d/conda.sh"
+: "${MINICONDA_DIR:?请先设置文首的安装路径变量}"
+curl -fsSL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o "$TMPDIR/miniconda.sh"
+bash "$TMPDIR/miniconda.sh" -b -p "$MINICONDA_DIR"
+source "$MINICONDA_DIR/etc/profile.d/conda.sh"
 conda --version
 ```
 
@@ -111,7 +158,7 @@ conda --version
 ## 3. 克隆仓库与上游代码
 
 ```bash
-export WORK="$HOME/work"
+: "${WORK:?请先设置文首的 WORK 与数据盘路径}"
 mkdir -p "$WORK"
 cd "$WORK"
 
@@ -267,7 +314,7 @@ CUDA_TOOLKIT_VERSION=12.8.1 bash scripts/01_setup_robotwin.sh
 
 ```bash
 SAPIEN_SITE="$WORK/dual_arm_VLA/envs/robotwin/.venv/lib/python3.10/site-packages/sapien"
-mkdir -p /tmp/oidn && cd /tmp/oidn
+mkdir -p "${TMPDIR:-/tmp}/oidn" && cd "${TMPDIR:-/tmp}/oidn"
 wget -q https://github.com/RenderKit/oidn/releases/download/v2.3.3/oidn-2.3.3.x86_64.linux.tar.gz
 tar -xzf oidn-2.3.3.x86_64.linux.tar.gz
 cp oidn-2.3.3.x86_64.linux/lib/libOpenImageDenoise*.so* "$SAPIEN_SITE/oidn_library/"
@@ -498,7 +545,10 @@ git push
 ```bash
 # Track A（4090/A100/L40S）
 # 前提：已完成第 0 节网络检查及第 2 节系统依赖
-git clone <REPO> && cd dual_arm_VLA
+: "${WORK:?请先设置文首的安装路径变量}"
+mkdir -p "$WORK"
+cd "$WORK"
+git clone <REPO> dual_arm_VLA && cd dual_arm_VLA
 uv sync --project envs/robotwin
 bash scripts/02_download_assets.sh
 bash scripts/01_setup_robotwin.sh

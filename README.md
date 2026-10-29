@@ -1,5 +1,15 @@
 # dual_arm_VLA
 
+> **执行前先设置安装位置**：按[磁盘与安装路径](docs/storage_layout.md)确认自己的系统盘、
+> 数据盘挂载点；`/data` 仅为示例，有数据盘请替换为实际路径，没有则用 `$HOME`。
+> 设置 `DATA_ROOT`、`WORK="$DATA_ROOT/work"` 以及缓存、Miniconda 路径，再克隆和安装。
+
+| 位置 | 开始前需要确认 / 替换 |
+| --- | --- |
+| 系统盘 | 驱动、系统依赖及系统配置保持系统安装位置；Clash 小文件默认在 `$HOME` |
+| 数据盘（若有） | 仓库、项目内环境、资产、训练产物、下载缓存和 Miniconda 的安装路径 |
+| Docker | 单独确认 Docker 镜像和持久卷的实际宿主存储位置，仓库位于数据盘不代表卷也在那里 |
+
 双臂 VLA 的**仿真数据采集、训练与仿真评估**。
 
 > 当前状态（2026-10-21）：本机 RTX 4050 已跑通
@@ -17,6 +27,7 @@ LeRobot       —— 后续 VLA 微调的数据格式与策略（当前先用 AC
 
 ## 文档
 
+- [磁盘与安装路径](docs/storage_layout.md)：先确认系统盘 / 数据盘，再设置项目、环境、缓存和 Docker 存储位置
 - [开源生态调研](docs/research.md)：RoboTwin / XPolicyLab / LeRobot / OpenVLA-OFT / π0 / SmolVLA 对比与本机约束分析
 - [实施计划](docs/plan.md)：架构、里程碑 M0–M6、数据/训练/评估方案、风险与时间估算
 - [Runbook](docs/runbook.md)：本机安装、补丁、采集、训练、评估的实际命令

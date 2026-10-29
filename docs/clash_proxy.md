@@ -1,5 +1,31 @@
 # 无图形界面 Linux 的 Clash 代理
 
+## 执行前：设置源码、安装与临时文件地址
+
+先按[安装路径与磁盘说明](storage_layout.md)确认本机系统盘 / 数据盘。
+**本篇的 `/home/ljk/...` 是作者机器的参考地址，不是读者必须使用的目录。**
+Clash 体积较小，下列默认值可保留在系统盘用户目录；需要放数据盘时，在安装前改成自己实际的绝对路径。
+`/data` 等示例只有确认已挂载后才代表数据盘；没有盘位区分时使用 `$HOME` 即可。
+
+| 需要设置的位置 | 默认值 | 哪些命令必须一致 |
+| --- | --- | --- |
+| `CLASHCTL_SOURCE` 源码目录 | `$HOME/tools/no_gui_linux_clash/clashctl` | clone / 解压目标和 `install.sh` 位置 |
+| `CLASHCTL_HOME` 安装与订阅目录 | `$HOME/.clashctl` | 安装 `--home`、后续 `source`、服务管理都用同一个地址 |
+| `CLASHCTL_TMP_DIR` 下载临时目录 | `${TMPDIR:-/tmp}` | 源码归档下载与解压读取地址；可改为数据盘的临时目录 |
+| 本地订阅 YAML 路径 | 第 2 节用 `$HOME/clash-config.yaml` 举例 | 改成自己上传文件的真实路径，不受源码目录控制 |
+
+在当前终端设置一次，后续命令沿用；新 SSH / tmux 会话重新加载自己的设置：
+
+```bash
+export CLASHCTL_SOURCE="${CLASHCTL_SOURCE:-$HOME/tools/no_gui_linux_clash/clashctl}"
+export CLASHCTL_HOME="${CLASHCTL_HOME:-$HOME/.clashctl}"
+export CLASHCTL_TMP_DIR="${CLASHCTL_TMP_DIR:-${TMPDIR:-/tmp}}"
+mkdir -p "$CLASHCTL_TMP_DIR"
+```
+
+修改上面的默认地址或预先导出自定义值；源码目录与安装目录必须分开。
+已经安装后更换变量不会搬迁服务与订阅，迁移前先备份并按新的安装地址重新设置。
+
 云服务器先把网络打通，再安装 Python、下载资产或构建 Docker。按本页验证 GitHub、PyPI、
 PyTorch 和 Hugging Face 的实际下载链路；连通性未通过时先处理代理，不要反复重跑完整安装。
 
@@ -19,15 +45,16 @@ sudo apt install -y ca-certificates curl git tar
 
 ### 能直连 GitHub
 
-在新机器上使用与本机相同的源码布局；安装目录单独放在 `~/.clashctl`：
+在新机器上使用文首选定的源码和安装目录：
 
 ```bash
-export CLASHCTL_SOURCE="$HOME/tools/no_gui_linux_clash/clashctl"
+: "${CLASHCTL_SOURCE:?请先按文首设置源码目录}"
+: "${CLASHCTL_HOME:?请先按文首设置安装目录}"
 export CLASHCTL_REF=4ec42a9f33108a16281bdad4eace7ccce94ae3b2
-mkdir -p "$HOME/tools/no_gui_linux_clash"
+mkdir -p "$(dirname "$CLASHCTL_SOURCE")"
 git clone https://github.com/nelvko/clashctl.git "$CLASHCTL_SOURCE"
 git -C "$CLASHCTL_SOURCE" checkout "$CLASHCTL_REF"
-bash "$CLASHCTL_SOURCE/install.sh" --local --home "$HOME/.clashctl" --gh-proxy=
+bash "$CLASHCTL_SOURCE/install.sh" --local --home "$CLASHCTL_HOME" --gh-proxy=
 ```
 
 本机已存在源码时，跳过 clone 和 checkout，直接执行最后一条安装命令。
@@ -41,14 +68,16 @@ bash "$CLASHCTL_SOURCE/install.sh" --local --home "$HOME/.clashctl" --gh-proxy=
 ```bash
 export GH_PROXY=https://gh-proxy.org
 export CLASHCTL_REF=4ec42a9f33108a16281bdad4eace7ccce94ae3b2
-export CLASHCTL_SOURCE="$HOME/tools/no_gui_linux_clash/clashctl"
+: "${CLASHCTL_SOURCE:?请先按文首设置源码目录}"
+: "${CLASHCTL_HOME:?请先按文首设置安装目录}"
+: "${CLASHCTL_TMP_DIR:?请先按文首设置临时目录}"
 mkdir -p "$CLASHCTL_SOURCE"
 curl -fL --connect-timeout 10 --max-time 180 --retry 2 \
   "${GH_PROXY%/}/https://github.com/nelvko/clashctl/archive/${CLASHCTL_REF}.tar.gz" \
-  -o /tmp/clashctl-source.tar.gz
-tar -xzf /tmp/clashctl-source.tar.gz --strip-components=1 -C "$CLASHCTL_SOURCE"
+  -o "$CLASHCTL_TMP_DIR/clashctl-source.tar.gz"
+tar -xzf "$CLASHCTL_TMP_DIR/clashctl-source.tar.gz" --strip-components=1 -C "$CLASHCTL_SOURCE"
 CLASHCTL_DOWNLOAD_TIMEOUT=180 bash "$CLASHCTL_SOURCE/install.sh" \
-  --local --home "$HOME/.clashctl" --gh-proxy "$GH_PROXY"
+  --local --home "$CLASHCTL_HOME" --gh-proxy "$GH_PROXY"
 ```
 
 不要在已有源码目录上解压覆盖。入口不可用时，更换可信下载入口，或在能联网的机器下载
@@ -67,7 +96,7 @@ CLASHCTL_DOWNLOAD_TIMEOUT=180 bash "$CLASHCTL_SOURCE/install.sh" \
 在**当前终端**加载安装后的 Shell 集成：
 
 ```bash
-export CLASHCTL_HOME="$HOME/.clashctl"
+export CLASHCTL_HOME="${CLASHCTL_HOME:-$HOME/.clashctl}"
 source "$CLASHCTL_HOME/scripts/cmd/clashctl.sh"
 
 # 交互输入订阅链接，避免直接写入 shell history

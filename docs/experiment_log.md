@@ -1,5 +1,10 @@
 # 实验记录
 
+> **记录前确认路径**：本篇不安装软件。实验环境按[磁盘与安装路径](storage_layout.md)
+> 设置自己的系统盘 / 数据盘、`WORK`、环境和缓存目录；无独立数据盘可使用 `$HOME`。
+> 新记录中的日志、checkpoint 和视频路径应指向本次实际仓库或 Docker 导出位置，
+> 不要把历史本机路径当作云服务器安装地址。
+
 > 一条实验一行；详细命令看 `docs/runbook.md`，任务定义看 `docs/task_handover_block.md`。
 
 | 日期 | 实验 ID | 任务 | 训练数据 | 策略 | epochs / batch | 评估设置 | episodes | 成功率 | 备注 |
